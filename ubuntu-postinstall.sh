@@ -45,7 +45,7 @@ ubuntu_hyperv() {
 ubuntu_tools() {
   # install basic tools
   echod "installing basic tools"
-  sudo apt-get -y install htop tmux tree vim wget curl gdebi
+  sudo apt-get -y install htop openssh-server tmux tree vim wget curl gdebi
 
   # install editor/coding tools
   echod "installing programming tools"
