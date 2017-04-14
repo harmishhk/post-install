@@ -124,6 +124,9 @@ ubuntu_theme() {
   unzip -d ~/.fonts ~/.fonts/inconsolata.zip
   wget -O ~/.fonts/selawik.zip https://github.com/Microsoft/Selawik/releases/download/1.01/Selawik_Release.zip
   unzip -d ~/.fonts ~/.fonts/selawik.zip
+  LATEST_IOSEVKA_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/be5invis/iosevka/releases/latest | sed -e 's/.*"tag_name":"v\([^"]*\)".*/\1/')
+  wget -O ~/.fonts/iosevka.zip https://github.com/be5invis/Iosevka/releases/download/v$LATEST_IOSEVKA_VERSION/01-iosevka-$LATEST_IOSEVKA_VERSION.zip
+  unzip -d ~/.fonts ~/.fonts/iosevka.zip
   file ~/.fonts/* | grep -vi 'ttf\|otf' | cut -d: -f1 | tr '\n' '\0' | xargs -0 rm
   sudo fc-cache -f -v
   echo "gsettings set org.gnome.desktop.interface font-name 'Selawik 9'" >> ~/.xprofile
@@ -155,7 +158,7 @@ ubuntu_theme() {
   gsettings set org.gnome.Terminal.Legacy.Settings default-show-menubar false
   local PUUID=$(gsettings get org.gnome.Terminal.ProfilesList default | cut -d "'" -f 2)
   gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$PUUID/ audible-bell false
-  gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$PUUID/ font "Inconsolata Medium 12"
+  gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$PUUID/ font "Iosevka 11"
   gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$PUUID/ login-shell true
   gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$PUUID/ scrollback-unlimited true
   gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$PUUID/ scrollbar-policy "never"
