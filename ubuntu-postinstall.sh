@@ -39,6 +39,12 @@ ubuntu_hyperv() {
 
   # start i3 by default for rdp session
   echo "i3" > ~/.xsession
+
+  # fix for us-intl keyboard with xrdp
+  sudo mv /etc/xrdp/km-0409.ini /etc/xrdp/km-0409.ini.bak
+  wget -O /tmp/km-0409.ini https://gist.githubusercontent.com/harmishhk/87a1d39c6f346287ea963cb609a09fa0/raw/55262e0963e566149cb486e40ebca4cae06e00ce/km-0409.ini
+  sudo mv -f /tmp/km-0409.ini /etc/xrdp/km-0409.ini
+  sudo chown xrdp:xrdp /etc/xrdp/km-0409.ini
 }
 
 # function for installing tools
@@ -152,7 +158,7 @@ ubuntu_theme() {
 
   # terminal
   echo "setting-up terminal theme"
-  sudo apt-get -y install git gnome-terminal wget
+  sudo apt-get -y install git gnome-terminal python-pygments wget
   wget -O ~/.Xresources https://raw.githubusercontent.com/chriskempson/base16-xresources/master/xresources/base16-tomorrow-night-256.Xresources
   git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
   gsettings set org.gnome.Terminal.Legacy.Settings default-show-menubar false
