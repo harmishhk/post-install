@@ -73,6 +73,9 @@ ubuntu_tools() {
   echod "installing visual studio code editor and extensions"
   wget -O /tmp/vscode.deb "https://go.microsoft.com/fwlink/?LinkID=760868"
   sudo gdebi -n /tmp/vscode.deb
+  local LATEST_SPELLCHECK_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/harmishhk/vscode-spell-check/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+  wget -O /tmp/Spell.vsix https://github.com/harmishhk/vscode-spell-check/releases/download/$LATEST_SPELLCHECK_VERSION/Spell-$LATEST_SPELLCHECK_VERSION.vsix
+  code --install-extension /tmp/Spell.vsix
   code --install-extension nonoroazoro.syncing
   local SYNCING_JSON=~/.config/Code/User/syncing.json
   mkdir -p $(dirname $SYNCING_JSON)
@@ -130,7 +133,7 @@ ubuntu_theme() {
   unzip -d ~/.fonts ~/.fonts/inconsolata.zip
   wget -O ~/.fonts/selawik.zip https://github.com/Microsoft/Selawik/releases/download/1.01/Selawik_Release.zip
   unzip -d ~/.fonts ~/.fonts/selawik.zip
-  LATEST_IOSEVKA_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/be5invis/iosevka/releases/latest | sed -e 's/.*"tag_name":"v\([^"]*\)".*/\1/')
+  local LATEST_IOSEVKA_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/be5invis/iosevka/releases/latest | sed -e 's/.*"tag_name":"v\([^"]*\)".*/\1/')
   wget -O ~/.fonts/iosevka.zip https://github.com/be5invis/Iosevka/releases/download/v$LATEST_IOSEVKA_VERSION/01-iosevka-$LATEST_IOSEVKA_VERSION.zip
   unzip -d ~/.fonts ~/.fonts/iosevka.zip
   file ~/.fonts/* | grep -vi 'ttf\|otf' | cut -d: -f1 | tr '\n' '\0' | xargs -0 rm
