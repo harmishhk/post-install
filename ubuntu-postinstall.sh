@@ -76,6 +76,9 @@ ubuntu_tools() {
   local LATEST_SPELLCHECK_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/harmishhk/vscode-spell-check/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
   wget -O /tmp/Spell.vsix https://github.com/harmishhk/vscode-spell-check/releases/download/$LATEST_SPELLCHECK_VERSION/Spell-$LATEST_SPELLCHECK_VERSION.vsix
   code --install-extension /tmp/Spell.vsix
+  local LATEST_SVGVIEWER_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/harmishhk/vscode-svgviewer/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+  wget -O /tmp/vscode-svgviewer.vsix https://github.com/harmishhk/vscode-svgviewer/releases/download/$LATEST_SVGVIEWER_VERSION/vscode-svgviewer-$LATEST_SVGVIEWER_VERSION.vsix
+  code --install-extension /tmp/vscode-svgviewer.vsix
   code --install-extension nonoroazoro.syncing
   local SYNCING_JSON=~/.config/Code/User/syncing.json
   mkdir -p $(dirname $SYNCING_JSON)
@@ -241,7 +244,7 @@ ubuntu_dev() {
 
   # install image tools
   echo "installing image and additional tools"
-  sudo apt-get -y install chrony geeqie gimp inkscape
+  sudo apt-get -y install chrony geeqie gimp inkscape jpegoptim libimage-exiftool-perl
 
   # password less sudo-ing
   echod "==> enabling password-less sudo-ing"
