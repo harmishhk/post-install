@@ -76,9 +76,6 @@ ubuntu_tools() {
   local LATEST_SPELLCHECK_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/harmishhk/vscode-spell-check/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
   wget -O /tmp/Spell.vsix https://github.com/harmishhk/vscode-spell-check/releases/download/$LATEST_SPELLCHECK_VERSION/Spell-$LATEST_SPELLCHECK_VERSION.vsix
   code --install-extension /tmp/Spell.vsix
-  local LATEST_SVGVIEWER_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/harmishhk/vscode-svgviewer/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
-  wget -O /tmp/vscode-svgviewer.vsix https://github.com/harmishhk/vscode-svgviewer/releases/download/$LATEST_SVGVIEWER_VERSION/vscode-svgviewer-$LATEST_SVGVIEWER_VERSION.vsix
-  code --install-extension /tmp/vscode-svgviewer.vsix
   code --install-extension nonoroazoro.syncing
   local SYNCING_JSON=~/.config/Code/User/syncing.json
   mkdir -p $(dirname $SYNCING_JSON)
@@ -139,6 +136,9 @@ ubuntu_theme() {
   local LATEST_IOSEVKA_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/be5invis/iosevka/releases/latest | sed -e 's/.*"tag_name":"v\([^"]*\)".*/\1/')
   wget -O ~/.fonts/iosevka.zip https://github.com/be5invis/Iosevka/releases/download/v$LATEST_IOSEVKA_VERSION/01-iosevka-$LATEST_IOSEVKA_VERSION.zip
   unzip -d ~/.fonts ~/.fonts/iosevka.zip
+  local LATEST_FIRACODE_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/tonsky/firacode/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+  wget -O ~/.fonts/firacode.zip https://github.com/tonsky/firacode/releases/download/$LATEST_FIRACODE_VERSION/FiraCode_$LATEST_FIRACODE_VERSION.zip
+  unzip -d ~/.fonts ~/.fonts/firacode.zip
   file ~/.fonts/* | grep -vi 'ttf\|otf' | cut -d: -f1 | tr '\n' '\0' | xargs -0 rm
   sudo fc-cache -f -v
   echo "gsettings set org.gnome.desktop.interface font-name 'Selawik 9'" >> ~/.xprofile
@@ -166,6 +166,9 @@ ubuntu_theme() {
   echo "setting-up terminal theme"
   sudo apt-get -y install git gnome-terminal python-pygments wget
   wget -O ~/.Xresources https://raw.githubusercontent.com/chriskempson/base16-xresources/master/xresources/base16-tomorrow-night-256.Xresources
+  git clone https://github.com/aaron-williamson/base16-gnome-terminal.git ~/.config/base16-gnome-terminal
+  chmod a+x ~/.config/base16-gnome-terminal/color-scripts/base16-tomorrow-night-256.sh
+  ~/.config/base16-gnome-terminal/color-scripts/base16-tomorrow-night-256.sh
   git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
   gsettings set org.gnome.Terminal.Legacy.Settings default-show-menubar false
   local PUUID=$(gsettings get org.gnome.Terminal.ProfilesList default | cut -d "'" -f 2)
@@ -209,6 +212,11 @@ ubuntu_docker() {
   sudo apt-get -y install wget
   sudo wget -O /usr/local/bin/docker-machine https://github.com/docker/machine/releases/download/v0.10.0/docker-machine-`uname -s`-`uname -m`
   sudo chmod +x /usr/local/bin/docker-machine
+
+  echod "installing docker-compose"
+  local LATEST_DOCKERCOMPOSE_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/docker/compose/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+  sudo wget -O /usr/local/bin/docker-compose https://github.com/docker/compose/releases/download/$LATEST_DOCKERCOMPOSE_VERSION/docker-compose-`uname -s`-`uname -m`
+  sudo chmod +x /usr/local/bin/docker-compose
 }
 
 # function to install ros
