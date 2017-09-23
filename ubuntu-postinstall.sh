@@ -16,6 +16,7 @@ echod() {
 ubuntu_update() {
   echod "performing update (all packages and kernel)"
   sudo apt-get update
+  sudo apt-get -y upgrade
   sudo apt-get -y dist-upgrade
 }
 
