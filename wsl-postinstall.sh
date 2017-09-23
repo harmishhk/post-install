@@ -1,7 +1,7 @@
 #!/bin/bash -eux
 
 # options for installation
-opts=(update tools theme docker dev)
+opts=(update tools theme dev)
 
 # set umask
 umask 0022
