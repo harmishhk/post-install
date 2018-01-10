@@ -108,16 +108,19 @@ ubuntu_i3() {
 
   # i3blocks for i3wm
   echod "installing i3bocks for better i3 status bar"
-  sudo apt-get -y install ruby-ronn acpi
-  git clone git://github.com/vivien/i3blocks /tmp/i3blocks
+  sudo apt-get -y install rsync ruby-ronn acpi
+  git clone https://github.com/vivien/i3blocks.git /tmp/i3blocks
   make -C /tmp/i3blocks clean debug
   sudo make -C /tmp/i3blocks install
   mkdir -p ~/.config/i3blocks/scripts
   cp /tmp/i3blocks/scripts/* ~/.config/i3blocks/scripts
+  git clone https://github.com/guimeira/i3lock-fancy-multimonitor.git /tmp/i3lock-fancy-multimonitor
+  rsync -r --exclude='.git' /tmp/i3lock-fancy-multimonitor ~/.config
+  sed -i "s/^BLURTYPE=.*/BLURTYPE=\"0x8\"/g" ~/.config/i3lock-fancy-multimonitor/lock
 
   # tools for i3wm
   echod "installing some i3 related tools"
-  sudo apt-get -y install arandr compton lxappearance rofi thunar
+  sudo apt-get -y install arandr compton lxappearance thunar
 }
 
 # function for theming gui components
