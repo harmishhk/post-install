@@ -95,7 +95,7 @@ ubuntu_tools() {
 
 # function to install i3 wm
 ubuntu_i3() {
-  echod " installing i3 window manage"
+  echod " installing i3 window manager"
   sudo sh -c "echo 'deb http://debian.sur5r.net/i3/ $(lsb_release -c -s) universe' >> /etc/apt/sources.list.d/i3.list"
   sudo apt-get update
   sudo apt-get --allow-unauthenticated install sur5r-keyring
@@ -108,7 +108,7 @@ ubuntu_i3() {
 
   # i3blocks for i3wm
   echod "installing i3bocks for better i3 status bar"
-  sudo apt-get -y install rsync ruby-ronn acpi
+  sudo apt-get -y install acpi rsync ruby-ronn i3lock imagemagick scrot
   git clone https://github.com/vivien/i3blocks.git /tmp/i3blocks
   make -C /tmp/i3blocks clean debug
   sudo make -C /tmp/i3blocks install
@@ -143,7 +143,7 @@ ubuntu_theme() {
   local LATEST_FIRACODE_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/tonsky/firacode/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
   wget -O ~/.fonts/firacode.zip https://github.com/tonsky/firacode/releases/download/$LATEST_FIRACODE_VERSION/FiraCode_$LATEST_FIRACODE_VERSION.zip
   unzip -d ~/.fonts ~/.fonts/firacode.zip
-  file ~/.fonts/* | grep -vi 'ttf\|otf' | cut -d: -f1 | tr '\n' '\0' | xargs -0 rm
+  file ~/.fonts/* | grep -vi 'ttf\|otf' | cut -d: -f1 | tr '\n' '\0' | xargs -0 rm -rf
   sudo fc-cache -f -v
   echo "gsettings set org.gnome.desktop.interface font-name 'Selawik 9'" >> ~/.xprofile
   echo "gsettings set org.gnome.desktop.interface monospace-font-name 'Inconsolata Medium 12'" >> ~/.xprofile
@@ -196,15 +196,13 @@ ubuntu_docker() {
   sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
   sudo apt-get update
   sudo apt-get -y install docker-ce
-  sudo systemctl enable docker
-  sudo service docker start # it should start automatically, but anyway start it
+
+  # run example docker container, making sure docker is working
+  sudo docker run hello-world
 
   # create docker group and add user to it
   sudo groupadd docker
   sudo usermod -aG docker $USER
-
-  # run example docker container, making sure docker is working
-  docker run hello-world
 
   echod "enabling user-namespace remapping for docker"
   sudo cp /lib/systemd/system/docker.service /etc/systemd/system/
@@ -213,8 +211,8 @@ ubuntu_docker() {
   sudo sed -i "s/^$USER.*/$USER:$(id -g):65536/" /etc/subgid
 
   echod "installing docker-machine"
-  sudo apt-get -y install wget
-  sudo wget -O /usr/local/bin/docker-machine https://github.com/docker/machine/releases/download/v0.10.0/docker-machine-`uname -s`-`uname -m`
+  local LATEST_DOCKERMACHINE_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/docker/machine/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+  sudo wget -O /usr/local/bin/docker-machine https://github.com/docker/machine/releases/download/$LATEST_DOCKERMACHINE_VERSION/docker-machine-`uname -s`-`uname -m`
   sudo chmod +x /usr/local/bin/docker-machine
 
   echod "installing docker-compose"
