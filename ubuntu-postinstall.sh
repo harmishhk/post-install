@@ -132,7 +132,9 @@ ubuntu_theme() {
   sudo apt-get -y install fontconfig-infinality unzip wget
   sudo ln -s /etc/fonts/infinality/conf.d /etc/fonts/infinality/styles.conf.avail/linux
   mkdir -p ~/.fonts
-  wget -O ~/.fonts/fontawesome-webfont.ttf https://github.com/FortAwesome/Font-Awesome/raw/master/fonts/fontawesome-webfont.ttf
+  local LATEST_FONTAWESOME_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/FortAwesome/Font-Awesome/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+  wget -O ~/.fonts/fontawesome.zip https://github.com/FortAwesome/Font-Awesome/releases/download/$LATEST_FONTAWESOME_VERSION/fontawesome-free-$LATEST_FONTAWESOME_VERSION.zip
+  unzip -d ~/.fonts ~/.fonts/fontawesome.zip
   wget -O ~/.fonts/inconsolata.zip http://www.fontsquirrel.com/fonts/download/Inconsolata
   unzip -d ~/.fonts ~/.fonts/inconsolata.zip
   wget -O ~/.fonts/selawik.zip https://github.com/Microsoft/Selawik/releases/download/1.01/Selawik_Release.zip
@@ -143,7 +145,7 @@ ubuntu_theme() {
   local LATEST_FIRACODE_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/tonsky/firacode/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
   wget -O ~/.fonts/firacode.zip https://github.com/tonsky/firacode/releases/download/$LATEST_FIRACODE_VERSION/FiraCode_$LATEST_FIRACODE_VERSION.zip
   unzip -d ~/.fonts ~/.fonts/firacode.zip
-  file ~/.fonts/* | grep -vi 'ttf\|otf' | cut -d: -f1 | tr '\n' '\0' | xargs -0 rm -rf
+  find . -not -name "*.otf" -not -name "*.ttf" -not -type d | xargs rm
   sudo fc-cache -f -v
   echo "gsettings set org.gnome.desktop.interface font-name 'Selawik 9'" >> ~/.xprofile
   echo "gsettings set org.gnome.desktop.interface monospace-font-name 'Inconsolata Medium 12'" >> ~/.xprofile
