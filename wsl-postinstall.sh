@@ -46,7 +46,7 @@ wsl_tools() {
   echod "installing and setting-up z-shell"
   sudo apt-get -y install zsh
   zsh --version
-  git clone git://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
+  git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
   # sudo chsh $USER -s $(grep /zsh$ /etc/shells | tail -1)
 }
 
