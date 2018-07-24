@@ -1,24 +1,31 @@
 #!/bin/bash -eux
 
 # options for installation
-opts=(update tools theme dev)
+opts=(update tools theme docker dev)
 
 # set umask
 umask 0022
 
 # set-up logging
-LOGFILE=/tmp/WSL-postinstall.txt
+LOGFILE=$HOME/postinstall.txt
 touch $LOGFILE
 echod() {
   echo "" 2>&1 | tee -a $LOGFILE
+  echo "" 2>&1 | tee -a $LOGFILE
   echo "==> $(date)" 2>&1 | tee -a $LOGFILE
   echo "==> $@" 2>&1 | tee -a $LOGFILE
+  echo "" 2>&1 | tee -a $LOGFILE
 }
 
 # function for updating ubuntu installation
 wsl_update() {
+  # fix for WLS-Ubuntu1804
+  sudo cp -p  /bin/true /sbin/ebtables
+
+  # now updating distro
   echod "performing update (all packages and kernel)"
   sudo apt-get update
+  sudo apt-get -y upgrade
   sudo apt-get -y dist-upgrade
 }
 
@@ -26,11 +33,15 @@ wsl_update() {
 wsl_tools() {
   # install basic tools
   echod "installing basic tools"
-  sudo apt-get -y install curl gdebi htop openssh-server tmux tree vim wget
+  sudo apt-get -y install apache2 chrony curl gdebi htop openssh-server tmux tree vim wget
 
   # install editor/coding tools
   echod "installing programming tools"
-  sudo apt-get -y install build-essential gdb llvm-3.6-dev clang-3.6 pylint python-autopep8
+  sudo apt-get -y install build-essential gdb llvm-dev clang
+
+  # install image tools
+  echod "installing image and additional tools"
+  sudo apt-get -y install jpegoptim libimage-exiftool-perl
 
   # install git and git-lfs
   echod "installing git and related tools"
@@ -42,63 +53,84 @@ wsl_tools() {
   sudo apt-get -y install git-lfs
   git lfs install
 
+  echod "installing conda"
+  https://repo.anaconda.com/archive/Anaconda3-5.2.0-Linux-x86_64.sh
+  wget -O /tmp/conda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+  bash /tmp/conda.sh -b -p $HOME/conda
+
   # install and setup zsh
   echod "installing and setting-up z-shell"
   sudo apt-get -y install zsh
   zsh --version
   git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
-  # sudo chsh $USER -s $(grep /zsh$ /etc/shells | tail -1)
+  sed -i -e 's/➜/➡/g' ~/.oh-my-zsh/themes/robbyrussell.zsh-theme
+  sed -i -e 's/✗/⌧/g' ~/.oh-my-zsh/themes/robbyrussell.zsh-theme
 }
 
 wsl_theme() {
+  # fonts
   echod "installing and setting up fonts"
-  sudo add-apt-repository -y ppa:no1wantdthisname/ppa
-  sudo apt-get update
-  sudo apt-get -y install fontconfig-infinality unzip wget
-  sudo ln -s /etc/fonts/infinality/conf.d /etc/fonts/infinality/styles.conf.avail/linux
-  mkdir -p ~/.fonts
-  wget -O ~/.fonts/fontawesome-webfont.ttf https://github.com/FortAwesome/Font-Awesome/raw/master/fonts/fontawesome-webfont.ttf
-  wget -O ~/.fonts/inconsolata.zip http://www.fontsquirrel.com/fonts/download/Inconsolata
-  unzip -d ~/.fonts ~/.fonts/inconsolata.zip
+  sudo apt-get -y install gconf2 unzip wget
+  mkdir -p ~/.fonts/installed
+  LATEST_FONTAWESOME_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/FortAwesome/Font-Awesome/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+  wget -O ~/.fonts/fontawesome.zip https://github.com/FortAwesome/Font-Awesome/releases/download/$LATEST_FONTAWESOME_VERSION/fontawesome-free-$LATEST_FONTAWESOME_VERSION-desktop.zip
+  unzip -d ~/.fonts ~/.fonts/fontawesome.zip
   wget -O ~/.fonts/selawik.zip https://github.com/Microsoft/Selawik/releases/download/1.01/Selawik_Release.zip
   unzip -d ~/.fonts ~/.fonts/selawik.zip
-  file ~/.fonts/* | grep -vi 'ttf\|otf' | cut -d: -f1 | tr '\n' '\0' | xargs -0 rm
+  LATEST_FIRACODE_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/tonsky/firacode/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+  wget -O ~/.fonts/firacode.zip https://github.com/tonsky/firacode/releases/download/$LATEST_FIRACODE_VERSION/FiraCode_$LATEST_FIRACODE_VERSION.zip
+  unzip -d ~/.fonts ~/.fonts/firacode.zip
+  find ~/.fonts -name "* *" -print0 | sort -rz | while read -d $'\0' f; do mv -v "$f" "$(dirname "$f")/$(basename "${f// /_}")"; done
+  find ~/.fonts -name "*.otf" -or -name "*.ttf" | xargs cp --target-directory=$HOME/.fonts/installed
+  find ~/.fonts -mindepth 1 -maxdepth 1 -not -name "installed" -exec rm -rf {} +
   sudo fc-cache -f -v
 }
 
 wsl_docker() {
   sudo apt-get -y install wget tar
-  echod "installing docker from source"
-  LATEST_DOCKER_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/docker/docker/releases/latest | sed -e 's/.*"tag_name":"v\([^"]*\)".*/\1/')
-  wget -O /tmp/docker.tgz https://get.docker.com/builds/Linux/x86_64/docker-$LATEST_DOCKER_VERSION.tgz
-  tar xzvf /tmp/docker.tgz -C /tmp
-  sudo mv /tmp/docker/docker /usr/local/bin/docker
-  sudo chmod +x /usr/local/bin/docker
-  # export DOCKER_HOST=tcp://127.0.0.1:2375
+  echod "installing docker client"
+  wget -O /tmp/go.tar.gz https://dl.google.com/go/go1.10.3.linux-amd64.tar.gz
+  tar -xf /tmp/go.tar.gz -C /tmp
+  PATH=$PATH:/tmp/go/bin
+  go get -d github.com/jstarks/npiperelay
+  WUser="$(powershell.exe '$env:UserName' | tr -d '\r')"
+  GOOS=windows go build -o /mnt/c/Users/$WUser/AppData/Local/go/bin/npiperelay.exe github.com/jstarks/npiperelay
+  sudo ln -s /mnt/c/Users/$WUser/AppData/Local/go/bin/npiperelay.exe /usr/local/bin/npiperelay.exe
+  rm -rf ~/go
+  sudo apt-get -y install socat docker.io
+  sudo adduser ${USER} docker
+  wget -O ~/docker-relay https://gist.githubusercontent.com/harmishhk/312d9d6fa281c971a591dc61416d993f/raw/ee421c7f8a7f749a9001712febe86924c1fd5e9d/docker-wsl-relay
+  chmod +x ~/docker-relay
 
   echod "installing docker-machine"
-  sudo apt-get -y install wget
-  sudo wget -O /usr/local/bin/docker-machine https://github.com/docker/machine/releases/download/v0.10.0/docker-machine-`uname -s`-`uname -m`
+  LATEST_DOCKERMACHINE_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/docker/machine/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+  sudo wget -O /usr/local/bin/docker-machine https://github.com/docker/machine/releases/download/$LATEST_DOCKERMACHINE_VERSION/docker-machine-`uname -s`-`uname -m`
   sudo chmod +x /usr/local/bin/docker-machine
+
+  echod "installing docker-compose"
+  LATEST_DOCKERCOMPOSE_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/docker/compose/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+  sudo wget -O /usr/local/bin/docker-compose https://github.com/docker/compose/releases/download/$LATEST_DOCKERCOMPOSE_VERSION/docker-compose-`uname -s`-`uname -m`
+  sudo chmod +x /usr/local/bin/docker-compose
 }
 
 wsl_ros() {
-  ROS_VERSION=indigo
+  ROS_VERSION=melodic
   echod "installing ros $ROS_VERSION"
 
   # setup source-list and keys
   sudo sh -c "echo 'deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main' > /etc/apt/sources.list.d/ros-latest.list"
-  sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-key 0xB01FA116
-  sudo apt-get update --fix-missing
+  curl -fsSL "http://ha.pool.sks-keyservers.net/pks/lookup?op=get&search=0x421C365BD9FF1F717815A3895523BAEEB01FA116" > /tmp/roskey
+  sudo apt-key add /tmp/roskey
+  sudo apt-get update
 
   # install ros-$ROS_VERSION-desktop
   sudo apt-get -y install \
   ros-$ROS_VERSION-desktop \
   ros-$ROS_VERSION-perception \
-  ros-$ROS_VERSION-navigation \
   ros-$ROS_VERSION-joy \
-  ros-$ROS_VERSION-teleop-twist-joy \
   python-catkin-tools
+  # ros-$ROS_VERSION-navigation \
+  # ros-$ROS_VERSION-teleop-twist-joy \
 
   ## setup rosdep
   sudo rosdep init
