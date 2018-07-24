@@ -1,2 +1,2 @@
 # post-install
-Scritps to run after system installation
+Scripts to run after system installation
