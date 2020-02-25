@@ -87,8 +87,9 @@ wsl_theme() {
 }
 
 wsl_docker() {
+  echod "installing and configuring docker"
+  sudo apt-get update
   sudo apt-get -y install wget tar
-  echod "installing docker client"
   wget -O /tmp/go.tar.gz https://dl.google.com/go/go1.10.3.linux-amd64.tar.gz
   tar -xf /tmp/go.tar.gz -C /tmp
   PATH=$PATH:/tmp/go/bin
@@ -97,8 +98,14 @@ wsl_docker() {
   GOOS=windows go build -o /mnt/c/Users/$WUser/AppData/Local/go/bin/npiperelay.exe github.com/jstarks/npiperelay
   sudo ln -s /mnt/c/Users/$WUser/AppData/Local/go/bin/npiperelay.exe /usr/local/bin/npiperelay.exe
   rm -rf ~/go
-  sudo apt-get -y install socat docker.io
-  sudo adduser ${USER} docker
+  sudo apt-get -y install apt-transport-https ca-certificates curl software-properties-common
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg > /tmp/dockerkey
+  sudo apt-key add /tmp/dockerkey
+  sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  sudo apt-get update
+  sudo apt-get -y install docker-ce
+  sudo groupadd docker
+  sudo usermod -aG docker $USER
   wget -O ~/docker-relay https://gist.githubusercontent.com/harmishhk/312d9d6fa281c971a591dc61416d993f/raw/ee421c7f8a7f749a9001712febe86924c1fd5e9d/docker-wsl-relay
   chmod +x ~/docker-relay
 
